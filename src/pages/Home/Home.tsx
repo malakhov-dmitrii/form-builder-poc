@@ -1,150 +1,123 @@
-import {
-  Card,
-  CircularProgress,
-  createStyles,
-  makeStyles,
-  Paper,
-  Theme,
-  Typography,
-} from '@material-ui/core';
-import React from 'react';
-import {
-  ChangeSet,
-  EditingState,
-  ViewState,
-  IntegratedEditing,
-  AppointmentModel,
-} from '@devexpress/dx-react-scheduler';
+import { createStyles, makeStyles, Paper, Theme } from '@material-ui/core';
+import React, { useState } from 'react';
+import { DragDropContext, DropResult } from 'react-beautiful-dnd';
+import { random } from 'lodash';
+import Sidebar from '../../shared/components/Sidebar';
+import { FormItem } from '../../shared/interfaces/FormItem';
+import BuilderPaper from '../../shared/components/BuilderPaper';
 
-import {
-  Scheduler,
-  DayView,
-  WeekView,
-  MonthView,
-  Appointments,
-  AppointmentForm,
-  AppointmentTooltip,
-  Toolbar,
-  ViewSwitcher,
-  TodayButton,
-  DateNavigator,
-  ConfirmationDialog,
-} from '@devexpress/dx-react-scheduler-material-ui';
+// a little function to help us with reordering the result
+const reorder = (list: any[], oldIndex: number, newIndex: number) => {
+  const temp = list[newIndex];
+  // eslint-disable-next-line no-param-reassign
+  list[newIndex] = list[oldIndex];
+  // eslint-disable-next-line no-param-reassign
+  list[oldIndex] = temp;
 
-import { format } from 'date-fns';
-import useSWR from 'swr';
-import Auth from '../../context/Auth';
-import { Course } from '../../shared/interfaces/course';
-import { request } from '../../shared/utils/api';
+  console.log('reorder: ', list);
 
-const currentDate = format(new Date(), 'yyyy-MM-dd');
+  return list;
+};
+
+const drawerWidth = 240;
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
+      display: 'flex',
+    },
+    button: {
+      marginLeft: theme.spacing(2),
+      cursor: 'move',
+      userSelect: 'none',
+    },
+    appBar: {
+      zIndex: theme.zIndex.drawer + 1,
+    },
+    drawer: {
+      width: drawerWidth,
+      flexShrink: 0,
+    },
+    drawerPaper: {
+      width: drawerWidth,
+    },
+    drawerContainer: {
+      overflow: 'auto',
+    },
+    content: {
       flexGrow: 1,
+      padding: theme.spacing(3),
+      marginTop: theme.spacing(3),
     },
-    menuButton: {
-      marginRight: theme.spacing(2),
+    draggableItem: {
+      display: 'flex',
+      alignItems: 'center',
+      borderRadius: '50px',
+      border: '1px dashed black',
+      padding: theme.spacing(1, 2),
     },
-    title: {
-      flexGrow: 1,
-    },
-    schedule: {
-      marginTop: theme.spacing(5),
-    },
-    paper: {
-      marginTop: theme.spacing(5),
+    droppable: {
+      border: '1px solid black',
       padding: theme.spacing(2),
+      margin: theme.spacing(2),
     },
   }),
 );
 
 const Home = () => {
   const classes = useStyles();
-  const user = Auth.useContainer().data;
-  const { data, isValidating } = useSWR<Course[]>(
-    `courses?tutors.id=${user?.id}`,
-    request,
-  );
+  const [items, setItems] = useState<FormItem[]>([]);
 
-  const schedule: AppointmentModel[] | undefined =
-    data &&
-    data.flatMap((course) =>
-      course?.schedule.map((i) => {
-        const item = {
-          ...i,
-          startDate: new Date(i.startDate),
-        };
+  const handleDelete = (id: string): void => {
+    setItems(items.filter((i) => i.id !== id));
+  };
 
-        if (item.endDate) {
-          item.endDate = new Date(i.endDate);
-        }
+  const handleAddNewItem = (result: DropResult) => {
+    // @ts-ignore
+    setItems([
+      ...items,
+      {
+        id: `${result.draggableId}_${random(0, 100000)}`,
+        content: `draggable ${result.draggableId} #${items.length}`,
+        type: result.draggableId.split('-')[1],
+      },
+    ]);
+  };
 
-        return item;
-      }),
-    );
-
-  const commitChanges = ({ added, changed, deleted }: ChangeSet) => {
-    if (added && data) {
-      const item = { ...added, course: data[0].id };
-      request('schedules', {
-        method: 'POST',
-        body: JSON.stringify(item),
-      });
+  const onDragEnd = (result: DropResult) => {
+    // dropped outside the list
+    if (!result.destination) {
+      return;
     }
-    if (changed) {
-      const id = Object.keys(changed)[0];
 
-      request(`schedules/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          ...changed[id],
-        }),
-      });
-    }
-    if (deleted) {
-      request(`schedules/${deleted}`, {
-        method: 'DELETE',
-      });
+    console.log(result);
+    if (
+      result.destination.droppableId === 'droppable-form' &&
+      (result.source.droppableId === 'droppable-layouts' ||
+        result.source.droppableId === 'droppable-components')
+    )
+      handleAddNewItem(result);
+
+    if (
+      result.destination.droppableId === 'droppable-form' &&
+      result.source.droppableId === 'droppable-form'
+    ) {
+      // @ts-ignore
+      setItems(reorder(items, result.source.index, result.destination.index));
     }
   };
 
   return (
-    <div>
-      <Paper className={classes.paper} elevation={0}>
-        {isValidating && !data ? (
-          <CircularProgress />
-        ) : (
-          <>
-            <Typography variant="h4">Кабинет преподавателя</Typography>
-
-            <Card className={classes.schedule}>
-              <Scheduler data={schedule} height={700}>
-                <ViewState defaultCurrentDate={currentDate} />
-
-                <EditingState onCommitChanges={commitChanges} />
-                <IntegratedEditing />
-                <ConfirmationDialog />
-
-                <MonthView />
-                <DayView />
-                <WeekView />
-                <Toolbar />
-                <ViewSwitcher />
-
-                <DateNavigator />
-                <TodayButton />
-                <Appointments />
-
-                <AppointmentTooltip showCloseButton showOpenButton />
-                <AppointmentForm />
-              </Scheduler>
-            </Card>
-          </>
-        )}
-      </Paper>
-    </div>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className={classes.root}>
+        <Sidebar />
+        <Paper className={classes.content}>
+          <div className={classes.droppable}>
+            <BuilderPaper items={items} onDelete={handleDelete} />
+          </div>
+        </Paper>
+      </div>
+    </DragDropContext>
   );
 };
 

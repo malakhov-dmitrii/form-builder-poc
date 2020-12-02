@@ -1,24 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import Link from '@material-ui/core/Link';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-import { useHistory, useLocation } from 'react-router-dom';
-import { BACKEND_URL } from '../../shared/utils/config';
-import Auth from '../../context/Auth';
+import { Link } from 'react-router-dom';
 
 function Copyright() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
       {'Copyright © '}
-      <Link color="inherit" href="https://material-ui.com/">
-        tutor.cskeleto.dev
-      </Link>{' '}
+      <span>cskeleto.dev</span>
       {new Date().getFullYear()}
     </Typography>
   );
@@ -69,20 +64,6 @@ const useStyles = makeStyles((theme) => ({
 
 const SignIn = () => {
   const classes = useStyles();
-  const location = useLocation();
-  const history = useHistory();
-  const [message, setMessage] = useState('');
-  const auth = Auth.useContainer();
-  console.log(auth);
-
-  useEffect(() => {
-    if (location.search) {
-      auth.login(location.search).then(() => {
-        setMessage('Logged in successfully, redirecting...');
-        setTimeout(() => history.push('/'), 1000);
-      });
-    }
-  }, [location.search]);
 
   return (
     <Grid container component="main" className={classes.root}>
@@ -105,22 +86,13 @@ const SignIn = () => {
           <Typography component="h1" variant="h5">
             Вход | Регистрация
           </Typography>
-          {message && (
-            <Typography
-              className={classes.submit}
-              component="h2"
-              variant="caption"
-            >
-              {message}
-            </Typography>
-          )}
           <Grid container>
             <Grid item className={classes.btn}>
-              <a href={`${BACKEND_URL}/connect/google`}>
+              <Link to="/">
                 <Button variant="contained" color="primary">
                   Google
                 </Button>
-              </a>
+              </Link>
             </Grid>
           </Grid>
           <Copyright />

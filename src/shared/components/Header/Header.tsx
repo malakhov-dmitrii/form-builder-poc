@@ -1,17 +1,17 @@
 import {
   AppBar,
-  Button,
   createStyles,
   makeStyles,
   Toolbar,
   Typography,
 } from '@material-ui/core';
 import React from 'react';
-import { useHistory } from 'react-router-dom';
-import Auth from '../../../context/Auth';
 
-const useStyles = makeStyles(() =>
+const useStyles = makeStyles((theme) =>
   createStyles({
+    appBar: {
+      zIndex: theme.zIndex.drawer + 1,
+    },
     title: {
       flexGrow: 1,
     },
@@ -21,28 +21,12 @@ const useStyles = makeStyles(() =>
 const Header = () => {
   const classes = useStyles();
 
-  const h = useHistory();
-  const auth = Auth.useContainer();
-
-  const logout = () => {
-    auth.logout();
-    setTimeout(() => {
-      h.push('/sign-in');
-    }, 200);
-  };
-
   return (
-    <AppBar position="sticky">
+    <AppBar className={classes.appBar} position="sticky">
       <Toolbar>
         <Typography variant="h6" className={classes.title}>
-          Tutor platform
+          Form builder
         </Typography>
-        <div>
-          <Button color="inherit">{auth.data?.username}</Button>
-          <Button color="secondary" variant="outlined" onClick={logout}>
-            Logout
-          </Button>
-        </div>
       </Toolbar>
     </AppBar>
   );
