@@ -10,6 +10,7 @@ import './App.scss';
 import Home from './pages/Home';
 import SignIn from './pages/SignIn';
 import Layout from './shared/components/Layout';
+import FormItemsContext from './shared/context/FormItems.context';
 
 function App() {
   return (
@@ -18,7 +19,9 @@ function App() {
         <Switch>
           <Route exact path="/">
             <Layout>
-              <Home />
+              <FormItemsContext.Provider>
+                <Home />
+              </FormItemsContext.Provider>
             </Layout>
           </Route>
           <Route path="/sign-in">

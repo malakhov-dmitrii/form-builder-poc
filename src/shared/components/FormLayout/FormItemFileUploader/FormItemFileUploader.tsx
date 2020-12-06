@@ -1,14 +1,22 @@
-
-import React from 'react';
-import styles from './FormItemFileUploader.module.scss';
+import { Input } from '@material-ui/core';
+import React, { useEffect } from 'react';
+import FormLayoutContext from '../FormLayout.context';
 
 const FormItemFileUploader = () => {
-  return (
-    <div>
-      FormItemFileUploader component works
-    </div>
-  )
-}
+  const { fields, init } = FormLayoutContext.useContainer();
 
-export default FormItemFileUploader
-  
+  useEffect(() => {
+    init(['name', 'disabled', 'required']);
+  }, []);
+
+  return (
+    <Input
+      type="file"
+      name={fields.name}
+      required={fields.required}
+      disabled={fields.disabled}
+    />
+  );
+};
+
+export default FormItemFileUploader;

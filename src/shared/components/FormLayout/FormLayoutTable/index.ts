@@ -1,3 +1,1 @@
-
-export {default} from './FormLayoutTable'
-  
+export { default } from './FormLayoutTable';

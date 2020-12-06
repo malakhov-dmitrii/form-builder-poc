@@ -3,6 +3,7 @@
 
 import {
   Box,
+  Button,
   createStyles,
   Divider,
   Drawer,
@@ -17,6 +18,7 @@ import React, { FC } from 'react';
 import { Draggable, Droppable } from 'react-beautiful-dnd';
 import OpenWithIcon from '@material-ui/icons/OpenWith';
 import { getListStyle, getItemStyle } from '../../utils/getStyles';
+import FormItemsContext from '../../context/FormItems.context';
 
 const drawerWidth = 240;
 
@@ -65,6 +67,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const Sidebar: FC = () => {
   const classes = useStyles();
+  const { onAddTable } = FormItemsContext.useContainer();
 
   return (
     <Drawer
@@ -81,40 +84,11 @@ const Sidebar: FC = () => {
             <Typography variant="h6">Cell layout</Typography>
             {/* <ListItemText primary="Cell layouts" /> */}
           </ListItem>
-          <Droppable droppableId="droppable-layouts">
-            {(provided, snapshot) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                style={getListStyle(snapshot.isDraggingOver)}
-              >
-                <Draggable
-                  // @ts-ignore
-                  draggableId="item-table"
-                  index={0}
-                >
-                  {(provided, snapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      // @ts-ignore
-                      style={getItemStyle(
-                        snapshot.isDragging,
-                        provided.draggableProps.style,
-                      )}
-                    >
-                      <Box className={classes.draggableItem}>
-                        <OpenWithIcon />
-                        <b>Table</b>
-                      </Box>
-                    </div>
-                  )}
-                </Draggable>
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
+          <Box m={2}>
+            <Button onClick={onAddTable} color="primary" variant="contained">
+              Add table layout
+            </Button>
+          </Box>
         </List>
 
         <Box my={2}>

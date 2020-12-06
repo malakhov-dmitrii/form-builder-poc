@@ -1,23 +1,17 @@
-import { createStyles, makeStyles, Paper, Theme } from '@material-ui/core';
+import {
+  createStyles,
+  makeStyles,
+  Paper,
+  Tab,
+  Tabs,
+  Theme,
+} from '@material-ui/core';
 import React, { useState } from 'react';
-import { DragDropContext, DropResult } from 'react-beautiful-dnd';
-import { random } from 'lodash';
+import { DragDropContext } from 'react-beautiful-dnd';
 import Sidebar from '../../shared/components/Sidebar';
-import { FormItem } from '../../shared/interfaces/FormItem';
-import BuilderPaper from '../../shared/components/BuilderPaper';
-
-// a little function to help us with reordering the result
-const reorder = (list: any[], oldIndex: number, newIndex: number) => {
-  const temp = list[newIndex];
-  // eslint-disable-next-line no-param-reassign
-  list[newIndex] = list[oldIndex];
-  // eslint-disable-next-line no-param-reassign
-  list[oldIndex] = temp;
-
-  console.log('reorder: ', list);
-
-  return list;
-};
+import BuilderPaper from './components/BuilderPaper';
+import FormItemsContext from '../../shared/context/FormItems.context';
+import Preview from './components/Preview';
 
 const drawerWidth = 240;
 
@@ -66,45 +60,10 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const Home = () => {
   const classes = useStyles();
-  const [items, setItems] = useState<FormItem[]>([]);
-
-  const handleDelete = (id: string): void => {
-    setItems(items.filter((i) => i.id !== id));
-  };
-
-  const handleAddNewItem = (result: DropResult) => {
-    // @ts-ignore
-    setItems([
-      ...items,
-      {
-        id: `${result.draggableId}_${random(0, 100000)}`,
-        content: `draggable ${result.draggableId} #${items.length}`,
-        type: result.draggableId.split('-')[1],
-      },
-    ]);
-  };
-
-  const onDragEnd = (result: DropResult) => {
-    // dropped outside the list
-    if (!result.destination) {
-      return;
-    }
-
-    console.log(result);
-    if (
-      result.destination.droppableId === 'droppable-form' &&
-      (result.source.droppableId === 'droppable-layouts' ||
-        result.source.droppableId === 'droppable-components')
-    )
-      handleAddNewItem(result);
-
-    if (
-      result.destination.droppableId === 'droppable-form' &&
-      result.source.droppableId === 'droppable-form'
-    ) {
-      // @ts-ignore
-      setItems(reorder(items, result.source.index, result.destination.index));
-    }
+  const { items, onDragEnd } = FormItemsContext.useContainer();
+  const [panelIdx, setPanelIdx] = useState(0);
+  const onModeChange = (e: any, value: number) => {
+    setPanelIdx(value);
   };
 
   return (
@@ -112,9 +71,23 @@ const Home = () => {
       <div className={classes.root}>
         <Sidebar />
         <Paper className={classes.content}>
-          <div className={classes.droppable}>
-            <BuilderPaper items={items} onDelete={handleDelete} />
-          </div>
+          <Tabs
+            value={panelIdx}
+            onChange={onModeChange}
+            indicatorColor="primary"
+            textColor="primary"
+            centered
+          >
+            <Tab label="Builder" />
+            <Tab disabled={items.length === 0} label="Preview" />
+          </Tabs>
+
+          {panelIdx === 0 && (
+            <div className={classes.droppable}>
+              <BuilderPaper items={items} />
+            </div>
+          )}
+          {panelIdx === 1 && <Preview items={items} />}
         </Paper>
       </div>
     </DragDropContext>
